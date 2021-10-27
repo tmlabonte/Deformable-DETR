@@ -107,11 +107,16 @@ def get_args_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_file', default='coco')
-    parser.add_argument('--coco_path', default='./data/coco', type=str)
+    #parser.add_argument('--coco_path', default='./data/coco', type=str)
+    parser.add_argument('--train_imgs_dir', type=str)
+    parser.add_argument('--val_imgs_dir', type=str)
+    parser.add_argument('--train_anns', type=str)
+    parser.add_argument('--val_anns', type=str)
+    parser.add_argument('--num_classes', type=int)
     parser.add_argument('--coco_panoptic_path', type=str)
     parser.add_argument('--remove_difficult', action='store_true')
 
-    parser.add_argument('--output_dir', default='',
+    parser.add_argument('--output_dir', default='out',
                         help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
@@ -120,7 +125,7 @@ def get_args_parser():
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
     parser.add_argument('--eval', action='store_true')
-    parser.add_argument('--num_workers', default=2, type=int)
+    parser.add_argument('--num_workers', default=4, type=int)
     parser.add_argument('--cache_mode', default=False, action='store_true', help='whether to cache images on memory')
 
     return parser
@@ -130,8 +135,6 @@ def main(args):
     utils.init_distributed_mode(args)
     print("git:\n  {}\n".format(utils.get_sha()))
 
-    if args.frozen_weights is not None:
-        assert args.masks, "Frozen training is meant for segmentation only"
     print(args)
 
     device = torch.device(args.device)
@@ -222,7 +225,8 @@ def main(args):
 
     if args.frozen_weights is not None:
         checkpoint = torch.load(args.frozen_weights, map_location='cpu')
-        model_without_ddp.detr.load_state_dict(checkpoint['model'])
+        checkpoint = {k: v for k,v in checkpoint['model'].items() if 'class_embed' not in k}
+        model_without_ddp.load_state_dict(checkpoint, strict=False)
 
     output_dir = Path(args.output_dir)
     if args.resume:
