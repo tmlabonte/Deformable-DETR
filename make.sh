@@ -1,3 +1,3 @@
 #!/bin/sh
-cd src/model/ops
+cd models/ops
 python setup.py build install
