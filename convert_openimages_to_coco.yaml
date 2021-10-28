@@ -20,4 +20,4 @@ jobs:
 - name: ConvertOpenImagesToCOCO
   sku: G1
   command:
-  - python openimages_to_coco/convert_openimages.py -p openimages
+  - python openimages_to_coco/convert_openimages.py -p $$PT_DATA_DIR/openimages

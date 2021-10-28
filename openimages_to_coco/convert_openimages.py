@@ -32,7 +32,8 @@ def parse_args():
     return args
 
 args = parse_args()
-base_dir = os.path.join(os.environ["PT_DATA_DIR"], args.path)
+base_dir = args.path
+print(f"Can find val file? {os.path.isfile(os.path.join(base_dir, 'val', 'fe600639ac5f36c1.jpg'))}")
 if not isinstance(args.subsets, list):
     args.subsets = [args.subsets]
 
@@ -105,7 +106,7 @@ for subset in args.subsets:
 
     # Add basic dataset info
     print('adding basic dataset info')
-    oi['info'] = {'contributos': 'Vittorio Ferrari, Tom Duerig, Victor Gomes, Ivan Krasin,\
+    oi['info'] = {'contributors': 'Vittorio Ferrari, Tom Duerig, Victor Gomes, Ivan Krasin,\
                   David Cai, Neil Alldrin, Ivan Krasinm, Shahab Kamali, Zheyun Feng,\
                   Anurag Batra, Alok Gunjan, Hassan Rom, Alina Kuznetsova, Jasper Uijlings,\
                   Stefan Popov, Matteo Malloci, Sami Abu-El-Haija, Rodrigo Benenson,\
