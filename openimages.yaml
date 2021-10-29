@@ -1,4 +1,4 @@
-description: DeformableDETR_OpenImages_DETReg
+description: DeformableDETR_OpenImages
 
 target:
   service: amlk8s
@@ -19,10 +19,10 @@ data:
 
 search:
   job_template:
-    name: DeformableDETR_OpenImages_DETReg_{auto:3s}
+    name: DeformableDETR_OpenImages_{auto:3s}
     sku: G8
     command:
-      - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 --train_imgs_dir $$PT_DATA_DIR/openimages/train --train_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_train_bbox.json --val_imgs_dir $$PT_DATA_DIR/openimages/val --val_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_val_bbox.json --lr {lr} --frozen_weights $$PT_DATA_DIR/detreg.pth --batch_size 16 --num_classes 601
+      - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 --train_imgs_dir $$PT_DATA_DIR/openimages/train --train_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_train_bbox.json --val_imgs_dir $$PT_DATA_DIR/openimages/val --val_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_val_bbox.json --lr {lr} --batch_size 16 --num_classes 601
 
   type: grid
   max_trials: 4
