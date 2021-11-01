@@ -22,7 +22,7 @@ search:
     name: DeformableDETR_OpenImages_NoCOCO_OneClass_DETReg_{auto:3s}
     sku: G8
     command:
-      - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir $$PT_DATA_DIR/openimages/train --train_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_nococo_train_bbox_oneclass.json --val_imgs_dir $$PT_DATA_DIR/openimages/val --val_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_nococo_val_bbox_oneclass.json --lr {lr} --frozen_weights $$PT_DATA_DIR/detreg.pth --batch_size 16 --num_classes 2
+      - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir $$PT_DATA_DIR/openimages/train --train_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_nococo_train_bbox_oneclass.json --val_imgs_dir $$PT_DATA_DIR/openimages/val --val_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_nococo_val_bbox_oneclass.json --lr {lr} --frozen_weights $$PT_DATA_DIR/detreg.pth --batch_size 32 --num_classes 2
 
   type: grid
   max_trials: 4
