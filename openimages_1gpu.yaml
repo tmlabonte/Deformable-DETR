@@ -19,7 +19,7 @@ data:
 
 search:
   job_template:
-    name: DeformableDETR_OpenImages_{auto:3s}
+    name: DeformableDETR_OpenImages_1GPU_{auto:3s}
     sku: G1
     command:
       - python main.py --train_imgs_dir $$PT_DATA_DIR/openimages/train --train_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_train_bbox.json --val_imgs_dir $$PT_DATA_DIR/openimages/val --val_anns $$PT_DATA_DIR/openimages/annotations/openimages_v6_val_bbox.json --lr {lr} --batch_size 4 --num_classes 601
