@@ -14,6 +14,7 @@ import json
 import random
 import time
 from pathlib import Path
+import os.path as osp
 
 import numpy as np
 import torch
@@ -223,12 +224,17 @@ def main(args):
     else:
         base_ds = get_coco_api_from_dataset(dataset_val)
 
+    if osp.isfile(osp.join(args.output_dir, "checkpoint.pth")):
+        args.frozen_weights = None
+        args.resume = osp.join(args.output_dir, "checkpoint.pth")
+
     if args.frozen_weights is not None:
         checkpoint = torch.load(args.frozen_weights, map_location='cpu')
         checkpoint = {k: v for k,v in checkpoint['model'].items() if 'class_embed' not in k}
         model_without_ddp.load_state_dict(checkpoint, strict=False)
 
     output_dir = Path(args.output_dir)
+    start_step = 0
     if args.resume:
         if args.resume.startswith('https'):
             checkpoint = torch.hub.load_state_dict_from_url(
@@ -257,12 +263,14 @@ def main(args):
                 lr_scheduler.step_size = args.lr_drop
                 lr_scheduler.base_lrs = list(map(lambda group: group['initial_lr'], optimizer.param_groups))
             lr_scheduler.step(lr_scheduler.last_epoch)
-            args.start_epoch = checkpoint['epoch'] + 1
+            args.start_epoch = checkpoint['epoch']
+            if 'step' in checkpoint.keys():
+                start_step = checkpoint['step']
         # check the resumed model
-        if not args.eval:
-            test_stats, coco_evaluator = evaluate(
-                model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
-            )
+        #if not args.eval:
+        #    test_stats, coco_evaluator = evaluate(
+        #        model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
+        #    )
     
     if args.eval:
         test_stats, coco_evaluator = evaluate(model, criterion, postprocessors,
@@ -277,7 +285,7 @@ def main(args):
         if args.distributed:
             sampler_train.set_epoch(epoch)
         train_stats = train_one_epoch(
-            model, criterion, data_loader_train, optimizer, device, epoch, args.clip_max_norm)
+            model, criterion, data_loader_train, optimizer, device, epoch, start_step, lr_scheduler, output_dir, args, args.clip_max_norm)
         lr_scheduler.step()
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
@@ -289,7 +297,8 @@ def main(args):
                     'model': model_without_ddp.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
+                    'epoch': epoch + 1,
+                    'step': 0,
                     'args': args,
                 }, checkpoint_path)
 
