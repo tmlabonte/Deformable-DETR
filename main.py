@@ -286,12 +286,14 @@ def main(args):
             sampler_train.set_epoch(epoch)
         train_stats = train_one_epoch(
             model, criterion, data_loader_train, optimizer, device, epoch, start_step, lr_scheduler, output_dir, args, args.clip_max_norm)
+
+        start_step = 0
+
         lr_scheduler.step()
         if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint.pth']
-            # extra checkpoint before LR drop and every 5 epochs
-            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 5 == 0:
-                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            checkpoint_paths = [output_dir / 'checkpoint.pth']            
+            checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
                     'model': model_without_ddp.state_dict(),

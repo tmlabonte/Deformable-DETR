@@ -2,7 +2,7 @@ description: DeformableDETR_OpenImages_NoVOC_OneClass_DETReg
 
 target:
   service: amlk8s
-  name: itpeastusv100cl
+  name: itplabrr1cl1
   vc: resrchvc
 
 environment:
@@ -14,8 +14,10 @@ environment:
 code:
   local_dir: $CONFIG_DIR/
 
-data:
-  remote_dir: data/
+storage:
+  objectnet:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
 
 jobs:
   name: DeformableDETR_OpenImages_NoVOC_OneClass_DETReg

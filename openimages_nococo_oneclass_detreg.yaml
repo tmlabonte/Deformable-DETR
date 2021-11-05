@@ -2,9 +2,9 @@ description: DeformableDETR_OpenImages_NoCOCO_OneClass_DETReg
 
 target:
   service: amlk8s
-  name: itpeastusv100cl
+  name: itpscusv100cl
   vc: resrchvc
-
+  
 environment:
   image: joshins/pytorch:1.7.0-cuda11.0-cudnn8-devel-wsdetr
   setup:
@@ -14,8 +14,10 @@ environment:
 code:
   local_dir: $CONFIG_DIR/
 
-data:
-  remote_dir: data/
+storage:
+  objectnet:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
 
 jobs:
   name: DeformableDETR_OpenImages_NoCOCO_OneClass_DETReg
