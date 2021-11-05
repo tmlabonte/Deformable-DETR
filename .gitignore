@@ -1,0 +1,20 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/datasets
+/.vs
+/models/ops/build
+/models/ops/MultiScaleDeformableAttention.egg-info
+/models/ops/modules/__pycache__
+/models/ops/functions/__pycache__
+/models/ops/dist
+/ckpts
+/models/__pycache__
+/openimages_to_coco/__pycache__
+/openimages_to_coco/pfqbnrc1.kls~
+/openimages_to_coco/5mmvdih1.dkb~
+/openimages_to_coco/1j5dzpf3.ay5~
+/util/__pycache__
+/__pycache__
+/.ptconfig
