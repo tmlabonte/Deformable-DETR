@@ -1,0 +1,26 @@
+description: DeformableDETR_COCO2017_DETReg
+
+target:
+  service: amlk8s
+  name: itpscusv100cl
+  vc: resrchvc
+
+environment:
+  image: joshins/pytorch:1.7.0-cuda11.0-cudnn8-devel-wsdetr
+  setup:
+   - pip install -r requirements.txt
+   - sh make.sh
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  objectnet:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: DeformableDETR_COCO2017_DETReg
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco/train2017 --train_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_train2017.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco/val2017 --val_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_val2017.json --frozen_weights /mnt/cvgroupsouthcentral/datasets/detreg.pth --batch_size 2 --num_classes 91 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco2017_detreg
