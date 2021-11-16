@@ -15,7 +15,7 @@ code:
   local_dir: $CONFIG_DIR/
 
 storage:
-  objectnet:
+  cvgroupsouthcentral:
     storage_account_name: cvgroupsouthcentral
     container_name: datasets
 
