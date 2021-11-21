@@ -23,4 +23,4 @@ jobs:
 - name: DeformableDETR_COCO60_OneClass
   sku: G8
   command:
-  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco --train_anns /mnt/cvgroupsouthcentral/coco/annotations/coco60_instances_trainval2017_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco --val_anns /mnt/cvgroupsouthcentral/coco/annotations/coco60_instances_trainval2017_oneclass.json --batch_size 2 --num_classes 91 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco60_oneclass --no_eval --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco --train_anns /mnt/cvgroupsouthcentral/coco/annotations/coco60_instances_trainval2017_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco --val_anns /mnt/cvgroupsouthcentral/coco/annotations/coco60_instances_trainval2017_oneclass.json --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco60_oneclass --no_eval --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth
