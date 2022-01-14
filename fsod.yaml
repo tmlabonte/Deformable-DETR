@@ -23,7 +23,7 @@ jobs:
 - name: DeformableDETR_FSOD
   sku: G8
   command:
-  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_train.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_train.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 800 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_train.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_train.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 800 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod --no_eval
 
 - name: DeformableDETR_FSOD_OneClass
   sku: G8
