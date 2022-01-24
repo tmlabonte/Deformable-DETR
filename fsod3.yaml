@@ -23,9 +23,9 @@ jobs:
 - name: DeformableDETR_FSOD
   sku: G8
   command:
-  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 801 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_800_train
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 801 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_800_train --lr 1e-4
 
 - name: DeformableDETR_FSOD_OneClass
   sku: G8
   command:
-  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_oneclass.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_800_train_oneclass
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_oneclass.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_800_train_oneclass --lr 1e-4
