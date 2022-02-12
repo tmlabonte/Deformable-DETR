@@ -25,6 +25,7 @@ import datasets.samplers as samplers
 from datasets import build_dataset, get_coco_api_from_dataset
 from engine import evaluate, train_one_epoch
 from models import build_model
+from models.backbone import build_swav_backbone_old
 
 
 def get_args_parser():
@@ -129,6 +130,10 @@ def get_args_parser():
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--num_workers', default=4, type=int)
     parser.add_argument('--cache_mode', default=False, action='store_true', help='whether to cache images on memory')
+    parser.add_argument('--load_backbone', default='swav')
+    parser.add_argument('--object_embedding_loss', default=True)
+    parser.add_argument('--object_embedding_coef', default=1)
+    parser.add_argument('--obj_embedding_head', default="intermediate")
 
     return parser
 
@@ -147,6 +152,7 @@ def main(args):
     np.random.seed(seed)
     random.seed(seed)
 
+    swav_model = build_swav_backbone_old(args, device)
     model, criterion, postprocessors = build_model(args)
     model.to(device)
 
@@ -286,7 +292,7 @@ def main(args):
         if args.distributed:
             sampler_train.set_epoch(epoch)
         train_stats = train_one_epoch(
-            model, criterion, data_loader_train, optimizer, device, epoch, start_step, lr_scheduler, output_dir, args, args.clip_max_norm)
+            model, swav_model, criterion, data_loader_train, optimizer, device, epoch, start_step, lr_scheduler, output_dir, args, args.clip_max_norm)
 
         start_step = 0
 

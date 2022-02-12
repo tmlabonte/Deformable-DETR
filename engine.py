@@ -22,7 +22,7 @@ from datasets.panoptic_eval import PanopticEvaluator
 from datasets.data_prefetcher import data_prefetcher
 
 
-def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
+def train_one_epoch(model: torch.nn.Module, swav_model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, start_step, lr_scheduler, output_dir, args, max_norm: float = 0):
     model.train()
@@ -46,6 +46,14 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
             metric_logger.update(lr=optimizer.param_groups[0]["lr"])
             metric_logger.update(grad_norm=0)
             continue
+
+        if swav_model is not None:
+            with torch.no_grad():
+                for elem in targets:
+                    if len(elem["patches"]) > 0:
+                        elem["patches"] = swav_model(elem["patches"])
+                    else:
+                        elem["patches"] = []
 
         outputs = model(samples)
         loss_dict = criterion(outputs, targets)

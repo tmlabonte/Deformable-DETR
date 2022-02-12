@@ -21,6 +21,7 @@ from pycocotools import mask as coco_mask
 from .torchvision_datasets import CocoDetection as TvCocoDetection
 from util.misc import get_local_rank, get_local_size
 import datasets.transforms as T
+import torchvision.transforms as TvT
 
 
 class CocoDetection(TvCocoDetection):
@@ -37,6 +38,12 @@ class CocoDetection(TvCocoDetection):
         img, target = self.prepare(img, target)
         if self._transforms is not None:
             img, target = self._transforms(img, target)
+        img2 = TvT.ToPILImage()(img)
+        crops = [img2.crop((b[0], b[1], b[2], b[3])) for b in target["boxes"].cpu().numpy()]
+        if crops:
+            target["patches"] = torch.stack([TvT.ToTensor()(TvT.Resize((128,128))(c)) for c in crops], dim=0).type_as(target["boxes"])
+        else:
+            target["patches"] = torch.tensor([]).type_as(target["boxes"])
         return img, target
 
 

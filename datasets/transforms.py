@@ -11,13 +11,15 @@
 Transforms and data augmentation for both image + bbox.
 """
 import random
+import torchvision.transforms.functional_tensor as TF
 
 import PIL
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from torchvision.transforms import RandomResizedCrop
 
-from util.box_ops import box_xyxy_to_cxcywh
+from util.box_ops import box_xyxy_to_cxcywh, box_cxcywh_to_xyxy
 from util.misc import interpolate
 
 
@@ -30,7 +32,7 @@ def crop(image, target, region):
     # should we do something wrt the original size?
     target["size"] = torch.tensor([h, w])
 
-    fields = ["labels", "area", "iscrowd"]
+    fields = ["labels", "area", "iscrowd", "patches"]
 
     if "boxes" in target:
         boxes = target["boxes"]
@@ -59,7 +61,8 @@ def crop(image, target, region):
             keep = target['masks'].flatten(1).any(1)
 
         for field in fields:
-            target[field] = target[field][keep]
+            if field in target:
+                target[field] = target[field][keep]
 
     return cropped_image, target
 
@@ -282,3 +285,114 @@ class Compose(object):
             format_string += "    {0}".format(t)
         format_string += "\n)"
         return format_string
+
+
+def random_image_box_translation(img, boxes):
+    boxes = boxes.clone()
+    im_shape = img.shape
+    h = random.randint(int(img.shape[2] / 4), img.shape[2] - int(img.shape[2] / 4))
+    w = random.randint(int(img.shape[3] / 4), img.shape[3] - int(img.shape[3] / 4))
+    img = torch.nn.functional.interpolate(img, (h, w), mode='bilinear')
+    new_img2 = torch.zeros(im_shape).to(img)
+    i = random.randint(0, im_shape[2] - h)
+    j = random.randint(0, im_shape[2] - w)
+    new_img2[:, :, i:i + h, j:j + w] = img
+
+    factor_h = h / (im_shape[-1] - 1)
+    factor_w = w / (im_shape[-2] - 1)
+    i = i/(im_shape[-1] - 1)
+    j = j/(im_shape[-2] - 1)
+    boxes = box_cxcywh_to_xyxy(boxes)
+    boxes[..., 0] = boxes[..., 0]*factor_w + j
+    boxes[..., 1] = boxes[..., 1]*factor_h + i
+    boxes[..., 2] = boxes[..., 2]*factor_w + j
+    boxes[..., 3] = boxes[..., 3]*factor_h + i
+    boxes = box_xyxy_to_cxcywh(boxes)
+    img = new_img2
+    return img, boxes
+
+
+def h_flip(x, y):
+    y = y.clone()
+    x = TF.hflip(x)
+    y[..., 0] = 1 - y[..., 0]
+    return x, y
+
+
+def v_flip(x, y):
+    y = y.clone()
+    x = TF.vflip(x)
+    y[..., 1] = 1 - y[..., 1]
+    return x, y
+
+def random_translate(image, mask, box_scale, box_shift):
+    im_shape = image.shape
+    h = random.randint(int(im_shape[1] / 4), im_shape[1] - int(im_shape[1] / 4))
+    w = random.randint(int(im_shape[2] / 4), im_shape[2] - int(im_shape[2] / 4))
+    img = torch.nn.functional.interpolate(image.unsqueeze(0), (h, w), mode='bilinear')[0]
+    m = torch.nn.functional.interpolate(mask.unsqueeze(0).type(torch.float), (h, w), mode='nearest')[0].type(torch.bool)
+    new_img2 = torch.zeros(im_shape).to(img)
+    new_mask2 = torch.zeros(mask.shape).to(mask)
+    i = random.randint(0, im_shape[1] - h)
+    j = random.randint(0, im_shape[2] - w)
+    new_img2[:, i:i + h, j:j + w] = img
+    new_mask2[:, i:i + h, j:j + w] = m
+    factor_h = h / (im_shape[1] - 1)
+    factor_w = w / (im_shape[2] - 1)
+    i = i / (im_shape[1] - 1)
+    j = j / (im_shape[2] - 1)
+    box_scale[0::2] *= factor_w
+    box_scale[1::2] *= factor_h
+    box_shift[0] = box_shift[0]*factor_w + j
+    box_shift[1] = box_shift[1]*factor_h + i
+    return new_img2, new_mask2, box_scale, box_shift
+
+@torch.no_grad()
+def get_random_image_and_perm(image, mask):
+    box_scale = torch.ones((4))
+    box_shift = torch.zeros((4))
+    new_img2 = image.clone()
+    new_mask2 = mask.clone()
+    new_mask2 = new_mask2.unsqueeze(0)
+    new_img2, new_mask2, box_scale, box_shift = random_crop_and_resize(new_img2, new_mask2, box_scale, box_shift)
+
+    if random.random() > 0.5:
+        new_img2, new_mask2, box_scale, box_shift = random_translate(new_img2, new_mask2, box_scale, box_shift)
+
+    if random.random() > 0.5:
+        new_img2 = TF.hflip(new_img2)
+        new_mask2 = TF.hflip(new_mask2)
+        box_shift[0] = 1 - box_shift[0]
+        box_scale[0] *= -1
+    if random.random() > 0.5:
+        new_img2 = TF.vflip(new_img2)
+        new_mask2 = TF.vflip(new_mask2)
+        box_shift[1] = 1 - box_shift[1]
+        box_scale[1] *= -1
+
+    box_trans = torch.stack([box_scale, box_shift], dim=-1)
+    return box_trans, new_img2, new_mask2[0]
+
+
+def random_crop_and_resize(new_img2, new_mask2, box_scale, box_shift):
+    box_scale = box_scale.clone()
+    box_shift = box_shift.clone()
+    i, j, h, w = RandomResizedCrop.get_params(new_img2, scale=(0.5, 1.), ratio=(1. / 4., 4. / 3.))
+    orig_w = new_img2.shape[2]
+    orig_h = new_img2.shape[1]
+    new_img2 = TF.crop(new_img2, i, j, h, w)
+    new_mask2 = TF.crop(new_mask2, i, j, h, w)
+    new_img2 = torch.nn.functional.interpolate(new_img2.unsqueeze(0), (orig_h, orig_w), mode='bilinear')[0]
+    new_mask2 = torch.nn.functional.interpolate(new_mask2.unsqueeze(0).type(torch.float), (orig_h, orig_w), mode='nearest')[0].type(torch.bool)
+    i = i / (orig_h - 1)
+    j = j / (orig_w - 1)
+    f_h = orig_h / h
+    f_w = orig_w / w
+    box_shift[1] = (box_shift[1] - i) * f_h
+    box_shift[0] = (box_shift[0] - j) * f_w
+    box_scale[1] *= box_scale[1] * f_h
+    box_scale[0] *= box_scale[0] * f_w
+    box_scale[3] *= f_h
+    box_scale[2] *= f_w
+    return new_img2, new_mask2, box_scale, box_shift
+

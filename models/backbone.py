@@ -22,6 +22,7 @@ from typing import Dict, List
 from util.misc import NestedTensor, is_main_process
 
 from .position_encoding import build_position_encoding
+from .swav_resnet50 import ResNet, resnet50
 
 
 class FrozenBatchNorm2d(torch.nn.Module):
@@ -82,31 +83,45 @@ class BackboneBase(nn.Module):
             self.num_channels = [2048]
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
 
-    def forward(self, tensor_list: NestedTensor):
-        xs = self.body(tensor_list.tensors)
-        out: Dict[str, NestedTensor] = {}
-        for name, x in xs.items():
-            m = tensor_list.mask
-            assert m is not None
-            mask = F.interpolate(m[None].float(), size=x.shape[-2:]).to(torch.bool)[0]
-            out[name] = NestedTensor(x, mask)
+    def forward(self, tensor_list):
+        if isinstance(tensor_list, NestedTensor):
+            xs = self.body(tensor_list.tensors)
+            out: Dict[str, NestedTensor] = {}
+            for name, x in xs.items():
+                m = tensor_list.mask
+                assert m is not None
+                mask = F.interpolate(m[None].float(), size=x.shape[-2:]).to(torch.bool)[0]
+                out[name] = NestedTensor(x, mask)
+        else:
+            out = self.forward_non_nested(tensor_list)
         return out
 
+    def forward_non_nested(self, tensors):
+        xs = self.body(tensors)
+        out: Dict[str, NestedTensor] = {}
+        for name, x in xs.items():
+            out[name] = x
+        return out
 
 class Backbone(BackboneBase):
     """ResNet backbone with frozen BatchNorm."""
+
     def __init__(self, name: str,
                  train_backbone: bool,
                  return_interm_layers: bool,
-                 dilation: bool):
-        norm_layer = FrozenBatchNorm2d
+                 dilation: bool,
+                 load_backbone: str):
+
+        pretrained = load_backbone == 'supervised'
         backbone = getattr(torchvision.models, name)(
             replace_stride_with_dilation=[False, False, dilation],
-            pretrained=is_main_process(), norm_layer=norm_layer)
-        assert name not in ('resnet18', 'resnet34'), "number of channels are hard coded"
+            pretrained=pretrained, norm_layer=FrozenBatchNorm2d)
+        # load the SwAV pre-training model from the url instead of supervised pre-training model
+        if name == 'resnet50' and load_backbone == 'swav':
+            checkpoint = torch.hub.load_state_dict_from_url('https://dl.fbaipublicfiles.com/deepcluster/swav_800ep_pretrain.pth.tar',map_location="cpu")
+            state_dict = {k.replace("module.", ""): v for k, v in checkpoint.items()}
+            backbone.load_state_dict(state_dict, strict=False)
         super().__init__(backbone, train_backbone, return_interm_layers)
-        if dilation:
-            self.strides[-1] = self.strides[-1] // 2
 
 
 class Joiner(nn.Sequential):
@@ -133,6 +148,31 @@ def build_backbone(args):
     position_embedding = build_position_encoding(args)
     train_backbone = args.lr_backbone > 0
     return_interm_layers = args.masks or (args.num_feature_levels > 1)
-    backbone = Backbone(args.backbone, train_backbone, return_interm_layers, args.dilation)
+    backbone = Backbone(args.backbone, train_backbone, return_interm_layers, args.dilation, load_backbone=args.load_backbone)
     model = Joiner(backbone, position_embedding)
+    model.num_channels = backbone.num_channels
     return model
+
+def build_swav_backbone(args, device):
+    model = resnet50(
+        normalize=True,
+        hidden_mlp=2048,
+        output_dim=128,
+    )
+    for name, parameter in model.named_parameters():
+        parameter.requires_grad_(False)
+
+    checkpoint = torch.hub.load_state_dict_from_url(
+        'https://dl.fbaipublicfiles.com/deepcluster/swav_800ep_pretrain.pth.tar', map_location="cpu")
+    state_dict = {k.replace("module.", ""): v for k, v in checkpoint.items()}
+    missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+    return model.to(device)
+
+def build_swav_backbone_old(args, device):
+    train_backbone = False
+    return_interm_layers = args.masks or (args.num_feature_levels > 1)
+    model = Backbone(args.backbone, train_backbone, return_interm_layers, args.dilation, load_backbone=args.load_backbone).to(device)
+    def model_func(elem):
+        return model(elem)['0'].mean(dim=(2,3))
+    return model_func
+

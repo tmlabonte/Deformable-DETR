@@ -7,9 +7,52 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # ------------------------------------------------------------------------
 
-from .deformable_detr import build
+import torch
+from .backbone import build_backbone
+from .deformable_detr import DeformableDETR, SetCriterion as DefSetCriterion, PostProcess as DefPostProcess
+from .matcher import build_matcher as build_def_matcher
+from .deformable_transformer import build_deforamble_transformer
 
 
 def build_model(args):
-    return build(args)
+    device = torch.device(args.device)
 
+    weight_dict = {'loss_ce': args.cls_loss_coef, 'loss_bbox': args.bbox_loss_coef,
+                   'loss_giou': args.giou_loss_coef}
+    # TODO this is a hack
+    if args.aux_loss:
+        aux_weight_dict = {}
+        for i in range(args.dec_layers - 1):
+            aux_weight_dict.update(
+                {k + f'_{i}': v for k, v in weight_dict.items()})
+
+        aux_weight_dict.update(
+            {k + f'_enc': v for k, v in weight_dict.items()})
+        weight_dict.update(aux_weight_dict)
+
+    losses = ['labels', 'boxes', 'cardinality']
+    if args.object_embedding_loss:
+        losses.append('object_embedding')
+        weight_dict['loss_object_embedding'] = args.object_embedding_coef
+
+    backbone = build_backbone(args)
+    transformer = build_deforamble_transformer(args)
+    model = DeformableDETR(
+        backbone,
+        transformer,
+        num_classes=args.num_classes,
+        num_queries=args.num_queries,
+        num_feature_levels=args.num_feature_levels,
+        aux_loss=args.aux_loss,
+        with_box_refine=args.with_box_refine,
+        two_stage=args.two_stage,
+        object_embedding_loss=args.object_embedding_loss,
+        obj_embedding_head=args.obj_embedding_head
+    )
+    matcher = build_def_matcher(args)
+    criterion = DefSetCriterion(args.num_classes, matcher, weight_dict, losses, focal_alpha=args.focal_alpha)
+    postprocessors = {'bbox': DefPostProcess()}
+
+    criterion.to(device)
+
+    return model, criterion, postprocessors
