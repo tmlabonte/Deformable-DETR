@@ -317,8 +317,14 @@ class SetCriterion(nn.Module):
         src_features = outputs['pred_features'][idx]
         tgt_idx = self._get_tgt_permutation_idx(indices)
         target_features = [t['patches'] for t in targets]
-        target_features = torch.stack([target_features[i][j] for i,j in zip(tgt_idx[0], tgt_idx[1])], dim=0)
-        return {'loss_object_embedding': torch.nn.functional.l1_loss(src_features, target_features, reduction='mean')}
+        try:
+            target_features = torch.stack([target_features[i][j] for i,j in zip(tgt_idx[0], tgt_idx[1])], dim=0)
+        except Exception as e:
+            print(e)
+            print(target_features)
+            print(tgt_idx)
+        loss = torch.nn.functional.l1_loss(src_features, target_features, reduction="mean")
+        return {'loss_object_embedding': loss}
 
     def loss_masks(self, outputs, targets, indices, num_boxes):
         """Compute the losses related to the masks: the focal loss and the dice loss.

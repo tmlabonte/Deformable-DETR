@@ -221,7 +221,7 @@ def main(args):
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop)
 
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         model_without_ddp = model.module
 
     if args.dataset_file == "coco_panoptic":
@@ -313,7 +313,7 @@ def main(args):
 
         if not args.no_eval:
             test_stats, coco_evaluator = evaluate(
-                model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
+                model, swav_model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
             )
 
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},

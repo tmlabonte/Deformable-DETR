@@ -114,7 +114,7 @@ def train_one_epoch(model: torch.nn.Module, swav_model: torch.nn.Module, criteri
 
 
 @torch.no_grad()
-def evaluate(model, criterion, postprocessors, data_loader, base_ds, device, output_dir):
+def evaluate(model, swav_model, criterion, postprocessors, data_loader, base_ds, device, output_dir):
     model.eval()
     criterion.eval()
 
@@ -137,6 +137,12 @@ def evaluate(model, criterion, postprocessors, data_loader, base_ds, device, out
     for samples, targets in metric_logger.log_every(data_loader, 10, header):
         samples = samples.to(device)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        if swav_model is not None:
+            for elem in targets:
+                if len(elem["patches"]) > 0:
+                    elem["patches"] = swav_model(elem["patches"])
+                else:
+                    elem["patches"] = []
 
         outputs = model(samples)
         loss_dict = criterion(outputs, targets)
