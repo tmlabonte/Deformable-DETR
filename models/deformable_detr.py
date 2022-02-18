@@ -319,10 +319,10 @@ class SetCriterion(nn.Module):
         target_features = [t['patches'] for t in targets]
         try:
             target_features = torch.stack([target_features[i][j] for i,j in zip(tgt_idx[0], tgt_idx[1])], dim=0)
-        except Exception as e:
-            print(e)
-            print(target_features)
-            print(tgt_idx)
+        except:
+            src_features = outputs['pred_features'][0]
+            target_features = outputs['pred_features'][0]
+            print(src_features.shape)
         loss = torch.nn.functional.l1_loss(src_features, target_features, reduction="mean")
         return {'loss_object_embedding': loss}
 
