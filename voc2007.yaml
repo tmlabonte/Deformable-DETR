@@ -2,7 +2,7 @@ description: DeformableDETR_VOC2007
 
 target:
   service: amlk8s
-  name: itpeastusv100cl
+  name: itpscusv100cl
   vc: resrchvc
 
 environment:
@@ -14,19 +14,18 @@ environment:
 code:
   local_dir: $CONFIG_DIR/
 
-data:
-  remote_dir: data/
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
 
-search:
-  job_template:
-    name: DeformableDETR_VOC2007_{auto:3s}
-    sku: G1
-    command:
-      - python src/main.py --train_imgs_dir $$PT_DATA_DIR/voc/voc2007/trainval --train_anns $$PT_DATA_DIR/voc/voc2007/annotations/trainval.json --val_imgs_dir $$PT_DATA_DIR/voc/voc2007/test --val_anns $$PT_DATA_DIR/voc/voc2007/test.json --lr {lr} --frozen_weights $$PT_DATA_DIR/detreg.pth --batch_size 4 --num_classes 20
+jobs:
+- name: DeformableDETR_VOC2007
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/trainval --train_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/trainval.json --val_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/test --val_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/test.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 21 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/voc2007
 
-  type: grid
-  max_trials: 4
-  params:
-    - name: lr
-      spec: discrete
-      values: [5e-5, 1e-4, 2e-4, 5e-4]
+- name: DeformableDETR_VOC2007_OneClass
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/trainval --train_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/trainval_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/test --val_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/test_oneclass.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/voc2007_oneclass

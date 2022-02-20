@@ -23,4 +23,9 @@ jobs:
 - name: DeformableDETR_COCO2017
   sku: G8
   command:
-  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco/train2017 --train_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_train2017.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco/val2017 --val_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_val2017.json --batch_size 2 --num_classes 91 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco2017
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco/train2017 --train_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_train2017.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco/val2017 --val_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_val2017.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 91 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco2017
+
+- name: DeformableDETR_COCO2017_OneClass
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/coco/train2017 --train_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_train2017_oneclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/coco/val2017 --val_anns /mnt/cvgroupsouthcentral/coco/annotations/instances_val2017_oneclass.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/coco2017_oneclass

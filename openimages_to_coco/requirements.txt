@@ -1,3 +1,0 @@
-tqdm
-imagesize
-scikit_image
