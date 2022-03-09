@@ -1,0 +1,26 @@
+description: DeformableDETR_iNaturalist
+
+target:
+  service: amlk8s
+  name: itphyperdgx2cl2
+  vc: hcrr06
+
+environment:
+  image: joshins/pytorch:1.7.0-cuda11.0-cudnn8-devel-wsdetr
+  setup:
+   - pip install -r requirements.txt
+   - sh make.sh
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: DeformableDETR_iNaturalist_Super_Finetune
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/inaturalist --train_anns /mnt/cvgroupsouthcentral/inaturalist/annotations/train_2017_bboxes_superclass.json --val_imgs_dir /mnt/cvgroupsouthcentral/inaturalist --val_anns /mnt/cvgroupsouthcentral/inaturalist/annotations/val_2017_bboxes_superclass.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/fsod/checkpoint0049.pth --batch_size 2 --num_classes 14 --epochs 20 --lr_drop 15 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_finetune_inaturalist_super
