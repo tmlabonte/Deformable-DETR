@@ -1,0 +1,31 @@
+description: DeformableDETR_Finetune
+
+target:
+  service: amlk8s
+  name: itpscusv100cl
+  vc: resrchvc
+
+environment:
+  image: joshins/pytorch:1.7.0-cuda11.0-cudnn8-devel-wsdetr
+  setup:
+   - pip install -r requirements.txt
+   - sh make.sh
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: DeformableDETR_FGVC
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fgvc-aircraft-2013b/images --train_anns /mnt/cvgroupsouthcentral/fgvc-aircraft-2013b/annotations/trainval.json --val_imgs_dir /mnt/cvgroupsouthcentral/fgvc-aircraft-2013b/images --val_anns /mnt/cvgroupsouthcentral/fgvc-aircraft-2013b/annotations/test.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/fsod_800_train/checkpoint0049.pth --batch_size 2 --num_classes 101 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fgvc_finetune
+
+- name: DeformableDETR_VOC
+  sku: G8
+  command:
+  - GPUS_PER_NODE=8 ./tools/run_dist_launch.sh 8 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/trainval --train_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/trainval.json --val_imgs_dir /mnt/cvgroupsouthcentral/voc/voc2007/test --val_anns /mnt/cvgroupsouthcentral/voc/voc2007/annotations/test.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/coco60/checkpoint0049.pth --batch_size 2 --num_classes 21 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/voc_finetune

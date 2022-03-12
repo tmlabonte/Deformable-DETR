@@ -1,0 +1,51 @@
+description: DeformableDETR_FSOD
+
+target:
+  service: amlk8s
+  name: itphyperdgx2cl2
+  vc: hcrr06
+
+environment:
+  image: joshins/pytorch:1.7.0-cuda11.0-cudnn8-devel-wsdetr
+  setup:
+   - pip install -r requirements.txt
+   - sh make.sh
+  
+code:
+  local_dir: $CONFIG_DIR/
+
+storage:
+  cvgroupsouthcentral:
+    storage_account_name: cvgroupsouthcentral
+    container_name: datasets
+
+jobs:
+- name: DeformableDETR_FSOD_40_Seed0
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed0_trn0.4.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed0_trn0.4.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 801 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed0 --no_eval
+
+- name: DeformableDETR_FSOD_OneClass_40_Seed0
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed0_trn0.4_class_agnostic.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed0_trn0.4_class_agnostic.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed0_oneclass --no_eval
+
+- name: DeformableDETR_FSOD_40_Seed1
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed1_trn0.4.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed1_trn0.4.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 801 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed1 --no_eval
+
+- name: DeformableDETR_FSOD_OneClass_40_Seed1
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed1_trn0.4_class_agnostic.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed1_trn0.4_class_agnostic.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed1_oneclass --no_eval
+
+- name: DeformableDETR_FSOD_40_Seed2
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed2_trn0.4.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed2_trn0.4.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 801 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed2 --no_eval
+
+- name: DeformableDETR_FSOD_OneClass_40_Seed2
+  sku: G16
+  command:
+  - GPUS_PER_NODE=16 ./tools/run_dist_launch.sh 16 ./configs/pt.sh --train_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --train_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_train_seed2_trn0.4_class_agnostic.json --val_imgs_dir /mnt/cvgroupsouthcentral/fsod/images --val_anns /mnt/cvgroupsouthcentral/fsod/annotations/fsod_800_test_seed2_trn0.4_class_agnostic.json --frozen_weights /mnt/cvgroupsouthcentral/ckpts/detreg.pth --batch_size 2 --num_classes 2 --epochs 50 --lr_drop 40 --output_dir /mnt/cvgroupsouthcentral/ckpts/fsod_40_seed2_oneclass --no_eval
